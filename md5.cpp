@@ -99,7 +99,6 @@ MD5::MD5()
 
 void MD5::do_section(unsigned char* section)
 {
-
     for (int i = 0; i < 64; ++i)
     {
         unsigned F;
@@ -130,35 +129,18 @@ void MD5::do_section(unsigned char* section)
         {
             word[k] = section[(g*4) + k];
         }
-
         unsigned previous_F = F;
         F = AA + F + get_4le(word) + T[i];
         AA = DD;
         DD = CC;
         CC = BB;
         BB += rotleft(F, s[i]);
-
     }
-    A += AA;
-    B += BB;
-    C += CC;
-    D += DD;
-
-    AA = A;
-    BB = B;
-    CC = C;
-    DD = D;
+    AA = A += AA;
+    BB = B += BB;
+    CC = C += CC;
+    DD = D += DD;
 }
-
-void pad(unsigned char* section, size_t sz)
-{
-    section[sz] = 0x80;
-    for (size_t i = sz + 1; i != 56; ++i)
-    {
-        section[i] = 0;
-    }
-}
-
 
 std::string MD5::hash(unsigned char* message, std::size_t N)
 {
@@ -166,6 +148,7 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
     std::size_t sz = N;
     std::size_t orig = sz;
     unsigned char* newm = new unsigned char[N];
+    unsigned char* newm_todelete = newm;
     memcpy(newm, message, N);
 
     unsigned char* section = new unsigned char[65] {};
@@ -193,7 +176,11 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
     else
     {
         memcpy(section, newm, sz);
-        pad(section, sz);
+        section[sz] = 0x80;
+        for (size_t i = sz + 1; i != 56; ++i)
+        {
+            section[i] = 0;
+        }
     }
 
     unsigned char* msg_size = make_8le(orig);
@@ -205,6 +192,7 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
 
     delete[] section;
     delete[] message;
+    delete[] newm_todelete;
     delete[] msg_size;
 
     outlog << std::hex << A << B << C << D << '\n';
