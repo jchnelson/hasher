@@ -3,14 +3,12 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <functional>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include "md5.h"
 
 using std::cout;
-
-using func = std::function<unsigned(unsigned, unsigned, unsigned)>;
 
 std::ofstream outlog("log.txt");
 
@@ -32,21 +30,32 @@ unsigned char* make_8le(size_t sz)
 {
     unsigned char* ret = new unsigned char[8];
 
-    ret[0] = sz & 255;
-    ret[1] = (sz >> 8) & 255;
-    ret[2] = (sz >> 16) & 255;
-    ret[3] = (sz >> 24) & 255;
-    ret[4] = (sz >> 32) & 255;
-    ret[5] = (sz >> 40) & 255;
-    ret[6] = (sz >> 48) & 255;
-    ret[7] = (sz >> 56);
+    // little endian, but first byte only has 5 bits for some reason?????
+    // 0b00000001 becomes 0b00001000
+    // 31 becomes 0b11111000
+    // 32 is 0b00000000 0b00000001
+    // 34 becomes 0b00011000 0b00000001
+
+    // to get the original, or all the other bits ahead of it, then right shift
+    // the entire number right by 3... or to reverse that:
+
+    size_t adj_sz = sz << 3;
+
+    ret[0] = adj_sz & 255;
+    ret[1] = (adj_sz >> 8) & 255;
+    ret[2] = (adj_sz >> 16) & 255;
+    ret[3] = (adj_sz >> 24) & 255;
+    ret[4] = (adj_sz >> 32) & 255;
+    ret[5] = (adj_sz >> 40) & 255;
+    ret[6] = (adj_sz >> 48) & 255;
+    ret[7] = (adj_sz >> 56);
 
     return ret;
 }
 
-unsigned* make_4le(size_t sz)
+unsigned char* make_4le(size_t sz)
 {
-    unsigned* ret = new unsigned[4];
+    unsigned char* ret = new unsigned char[4];
 
     ret[0] = sz & 255;
     ret[1] = (sz >> 8) & 255;
@@ -59,16 +68,20 @@ unsigned* make_4le(size_t sz)
 std::string hex_str(unsigned a, unsigned b, unsigned c, unsigned d)
 {
     std::ostringstream ret;
-    unsigned* aa = make_4le(a);
-    unsigned* bb = make_4le(b);
-    unsigned* cc = make_4le(c);
-    unsigned* dd = make_4le(d);
+    unsigned char* aa = make_4le(a);
+    unsigned char* bb = make_4le(b);
+    unsigned char* cc = make_4le(c);
+    unsigned char* dd = make_4le(d);
 
     ret << std::hex 
-        << aa[0] << aa[1] << aa[2] << aa[3]
-        << bb[0] << bb[1] << bb[2] << bb[3]
-        << cc[0] << cc[1] << cc[2] << cc[3]
-        << dd[0] << dd[1] << dd[2] << dd[3];
+        << (aa[0] >> 4) << (aa[0] & 15) << (aa[1] >> 4) << (aa[1] & 15) 
+        << (aa[2] >> 4) << (aa[2] & 15) << (aa[3] >> 4) << (aa[3] & 15)
+        << (bb[0] >> 4) << (bb[0] & 15) << (bb[1] >> 4) << (bb[1] & 15)
+        << (bb[2] >> 4) << (bb[2] & 15) << (bb[3] >> 4) << (bb[3] & 15)
+        << (cc[0] >> 4) << (cc[0] & 15) << (cc[1] >> 4) << (cc[1] & 15) 
+        << (cc[2] >> 4) << (cc[2] & 15) << (cc[3] >> 4) << (cc[3] & 15)
+        << (dd[0] >> 4) << (dd[0] & 15) << (dd[1] >> 4) << (dd[1] & 15)
+        << (dd[2] >> 4) << (dd[2] & 15) << (dd[3] >> 4) << (dd[3] & 15);
 
     return ret.str();
 }
@@ -172,22 +185,49 @@ std::string MD5::hash(const std::string& message)
 {
 
     size_t sz = message.size();
+    size_t orig = sz;
+    std::string newm = message;
 
     unsigned char* section = new unsigned char[64]{};
 
-    // next handle larger messages
+    if (sz >= 56)
+    {
+        while (sz > 64)
+        { 
+            memcpy(section, newm.data(), 64);
+            do_section(section);
+            std::fill_n(section, 64, 0);
+            sz -= 64;
+            newm = newm.substr(64);
+        }
+        // we don't have a full block to process, and now
+        // the padding happens
+
+        memcpy(section, newm.data(), sz);
+        section[sz] = 0x80;
+        for (size_t i = sz + 1; i != 64; ++i)
+        {
+            section[i] = 0;
+        }
+        do_section(section);
+        std::fill_n(section, 64, 0);
+        sz = 0; // now we enter the small sz section with 0 sz
+    }
 
     if (sz < 56)
     {
         memcpy(section, message.data(), sz);
         pad(section, sz);
-        unsigned char* msg_size = make_8le(sz);
+        unsigned char* msg_size = make_8le(orig);
         for (size_t i = 56; i != 64; ++i)
         {
             section[i] = msg_size[i - 56];
+            cout << unsigned(msg_size[i-56]);
         }
+        //section[56] = 0;
+        //section[57] = 1;
     }
-
+    cout << '\n';
     do_section(section);
     delete[] section;
 
