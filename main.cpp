@@ -17,6 +17,6 @@ int main()
 
     SHA1 sha1;
 
-    auto steve = sha1.hash_file("Requiem.mp3");
+    auto steve = sha1.hash_string("Bob's your uncle");
     cout << steve;
 }
