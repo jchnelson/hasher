@@ -3,9 +3,11 @@
 #include <cstddef>
 #include <iostream>
 #include <iomanip>
+#include <ios>
 #include <string>
 #include <algorithm>
 #include <fstream>
+#include <filesystem>
 #include <sstream>
 #include "md5.h"
 
@@ -13,34 +15,19 @@ using std::cout;
 
 std::ofstream outlog("log.txt");
 
-unsigned char* make_8be(size_t sz)
+void MD5::reset_state()
 {
-    unsigned char* ret = new unsigned char[8];
-    ret[0] = (sz >> 56);
-    ret[1] = (sz >> 48) & 255;
-    ret[2] = (sz >> 40) & 255;
-    ret[3] = (sz >> 32) & 255;
-    ret[4] = (sz >> 24) & 255;
-    ret[5] = (sz >> 16) & 255;
-    ret[6] = (sz >> 8) & 255;
-    ret[7] = (sz & 255);
-    return ret;
+    AA = A = 0x67452301;
+    BB = B = 0xefcdab89;
+    CC = C = 0x98badcfe;
+    DD = D = 0x10325476;
 }
 
-unsigned char* make_8le(size_t sz)
+unsigned char* make_8le(std::size_t sz)
 {
     unsigned char* ret = new unsigned char[8];
 
-    // little endian, but first byte only has 5 bits for some reason
-    // 0b00000001 becomes 0b00001000
-    // 31 becomes 0b11111000
-    // 32 is 0b00000000 0b00000001
-    // 34 becomes 0b00011000 0b00000001
-
-    // to get the original, or all the other bits ahead of it, then right shift
-    // the entire number right by 3... or to reverse that:
-
-    size_t adj_sz = sz << 3;
+    size_t adj_sz = sz * 8; // size calculated from chars, so * 8 for size in bits
 
     ret[0] = adj_sz & 255;
     ret[1] = (adj_sz >> 8) & 255;
@@ -56,7 +43,7 @@ unsigned char* make_8le(size_t sz)
 
 unsigned char* make_4le(size_t sz)
 {
-    unsigned char* ret = new unsigned char[4];
+    unsigned char* ret = new unsigned char[4]; // size in bytes
 
     ret[0] = sz & 255;
     ret[1] = (sz >> 8) & 255;
@@ -83,6 +70,11 @@ std::string hex_str(unsigned a, unsigned b, unsigned c, unsigned d)
         << (cc[2] >> 4) << (cc[2] & 15) << (cc[3] >> 4) << (cc[3] & 15)
         << (dd[0] >> 4) << (dd[0] & 15) << (dd[1] >> 4) << (dd[1] & 15)
         << (dd[2] >> 4) << (dd[2] & 15) << (dd[3] >> 4) << (dd[3] & 15);
+
+    delete[] aa;
+    delete[] bb;
+    delete[] cc;
+    delete[] dd;
 
     return ret.str();
 }
@@ -167,29 +159,31 @@ void pad(unsigned char* section, size_t sz)
     }
 }
 
-std::string MD5::hash(const std::string& message)
+
+std::string MD5::hash(unsigned char* message, std::size_t N)
 {
 
-    size_t sz = message.size();
-    size_t orig = sz;
-    std::string newm = message;
+    std::size_t sz = N;
+    std::size_t orig = sz;
+    unsigned char* newm = new unsigned char[N];
+    memcpy(newm, message, N);
 
-    unsigned char* section = new unsigned char[65]{};
+    unsigned char* section = new unsigned char[65] {};
     while (sz > 64)
     {
-        memcpy(section, newm.data(), 64);
+        memcpy(section, newm, 64);
         section[64] = 0;
         do_section(section);
         std::fill_n(section, 64, 0);
         sz -= 64;
-        newm = newm.substr(64);
+        std::advance(newm, 64);
     }
 
     if (sz >= 56)
     {
-        memcpy(section, newm.data(), sz);
+        memcpy(section, newm, sz);
         section[sz] = 0x80;
-        for (size_t i = sz + 1; i != 64; ++i)
+        for (std::size_t i = sz + 1; i != 64; ++i)
         {
             section[i] = 0x00;
         }
@@ -198,22 +192,43 @@ std::string MD5::hash(const std::string& message)
     }
     else
     {
-        memcpy(section, newm.data(), sz);
+        memcpy(section, newm, sz);
         pad(section, sz);
     }
 
     unsigned char* msg_size = make_8le(orig);
-    for (size_t i = 56; i != 64; ++i)
+    for (std::size_t i = 56; i != 64; ++i)
     {
         section[i] = msg_size[i - 56];
-        cout << unsigned(msg_size[i - 56]);
     }
     do_section(section);
-    cout << '\n';
-    
+
     delete[] section;
+    delete[] message;
+    delete[] msg_size;
 
     outlog << std::hex << A << B << C << D << '\n';
 
-    return hex_str(A,B,C,D);
+    std::string ret = hex_str(A,B,C,D);
+    outlog << ret << '\n';
+
+    reset_state();
+    return ret;
+}
+
+std::string MD5::hash_file(const std::string& filename)
+{
+    std::basic_ifstream<unsigned char> infile(filename, std::ios_base::binary);
+    std::size_t filesize = std::filesystem::file_size(std::filesystem::path(filename));
+    unsigned char* message = new unsigned char[filesize];
+    infile.read(message, filesize);
+    return hash(message, filesize);
+}
+
+std::string MD5::hash_string(const std::string& message)
+{
+    std::size_t sz = message.size();
+    unsigned char* umsg = new unsigned char[sz];
+    memcpy(umsg, message.data(), sz);
+    return hash(umsg, sz);
 }

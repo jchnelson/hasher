@@ -1,13 +1,15 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <cstddef>
+#include <iterator>
 
 class MD5
 {
 public:
     MD5();
-    std::string hash(const std::string&);
-
+    std::string hash_file(const std::string&);
+    std::string hash_string(const std::string&);
 
 private:
     unsigned A = 0x67452301;
@@ -25,4 +27,7 @@ private:
         4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,  4, 11, 16, 23,
         6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,  6, 10, 15, 21 };
     void do_section(unsigned char*);
+    std::string hash(unsigned char*, std::size_t);
+    void reset_state();
 };
+
