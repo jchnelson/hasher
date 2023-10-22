@@ -1,14 +1,15 @@
-#pragma warning(disable:6386)
-#include <cmath>
-#include <cstddef>
+#include <cmath> // std::pow
+#include <cstddef> // std::size_t
 #include <iostream>
-#include <iomanip>
-#include <ios>
+#include <iomanip> // std::setw, std::right
+#include <ios> // std::ios_base::binary
 #include <string>
 #include <algorithm>
+#include <iterator> // std::advance
 #include <fstream>
 #include <filesystem>
 #include <sstream>
+
 #include "md5.h"
 
 using std::cout;
@@ -144,7 +145,6 @@ void MD5::do_section(unsigned char* section)
 
 std::string MD5::hash(unsigned char* message, std::size_t N)
 {
-
     std::size_t sz = N;
     std::size_t orig = sz;
     unsigned char* newm = new unsigned char[N];
@@ -157,11 +157,9 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
         memcpy(section, newm, 64);
         section[64] = 0;
         do_section(section);
-        std::fill_n(section, 64, 0);
         sz -= 64;
         std::advance(newm, 64);
     }
-
     if (sz >= 56)
     {
         memcpy(section, newm, sz);
@@ -171,7 +169,6 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
             section[i] = 0x00;
         }
         do_section(section);
-        std::fill_n(section, 64, 0);
     }
     else
     {
@@ -182,7 +179,6 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
             section[i] = 0;
         }
     }
-
     unsigned char* msg_size = make_8le(orig);
     for (std::size_t i = 56; i != 64; ++i)
     {
