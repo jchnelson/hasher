@@ -1,3 +1,4 @@
+#pragma warning(disable:6386)
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -30,7 +31,7 @@ unsigned char* make_8le(size_t sz)
 {
     unsigned char* ret = new unsigned char[8];
 
-    // little endian, but first byte only has 5 bits for some reason?????
+    // little endian, but first byte only has 5 bits for some reason
     // 0b00000001 becomes 0b00001000
     // 31 becomes 0b11111000
     // 32 is 0b00000000 0b00000001
@@ -92,12 +93,6 @@ unsigned get_4le(unsigned char* bob)
     return ret;
 }
 
-unsigned get_4be(unsigned char* bob)
-{
-    unsigned ret = bob[3] | bob[2] << 8 | bob[1] << 16 | bob[0] << 24;
-    return ret;
-}
-
 unsigned rotleft(unsigned orig, unsigned amount)
 {
     return (orig << amount) | (orig >> (32 - amount));
@@ -143,9 +138,6 @@ void MD5::do_section(unsigned char* section)
         {
             word[k] = section[(g*4) + k];
         }
-        //outlog << std::dec << " operation " << std::right << std::setw(2) << i
-        // << " x[k]: " << std::hex << get_4le(word) << '\n';
-
 
         unsigned previous_F = F;
         F = AA + F + get_4le(word) + T[i];
@@ -154,22 +146,16 @@ void MD5::do_section(unsigned char* section)
         CC = BB;
         BB += rotleft(F, s[i]);
 
-        outlog << "A is " << std::hex << AA << " F is " << previous_F << " constant is "
-            << T[i] << " message is " << get_4le(word)
-            << " shift amount " << std::dec << s[i] << '\n';
-
-
-        outlog << "after operation " << std::dec << i
-            << " with message segment " << std::hex << get_4le(word) << '\n';
-        outlog << "F was " << std::hex << F << '\n';
-        outlog << AA << ' ' << BB << ' ' << CC << ' ' << DD << '\n';
-
     }
     A += AA;
     B += BB;
     C += CC;
     D += DD;
 
+    AA = A;
+    BB = B;
+    CC = C;
+    DD = D;
 }
 
 void pad(unsigned char* section, size_t sz)
@@ -188,47 +174,43 @@ std::string MD5::hash(const std::string& message)
     size_t orig = sz;
     std::string newm = message;
 
-    unsigned char* section = new unsigned char[64]{};
+    unsigned char* section = new unsigned char[65]{};
+    while (sz > 64)
+    {
+        memcpy(section, newm.data(), 64);
+        section[64] = 0;
+        do_section(section);
+        std::fill_n(section, 64, 0);
+        sz -= 64;
+        newm = newm.substr(64);
+    }
 
     if (sz >= 56)
     {
-        while (sz > 64)
-        { 
-            memcpy(section, newm.data(), 64);
-            do_section(section);
-            std::fill_n(section, 64, 0);
-            sz -= 64;
-            newm = newm.substr(64);
-        }
-        // we don't have a full block to process, and now
-        // the padding happens
-
         memcpy(section, newm.data(), sz);
         section[sz] = 0x80;
         for (size_t i = sz + 1; i != 64; ++i)
         {
-            section[i] = 0;
+            section[i] = 0x00;
         }
         do_section(section);
         std::fill_n(section, 64, 0);
-        sz = 0; // now we enter the small sz section with 0 sz
+    }
+    else
+    {
+        memcpy(section, newm.data(), sz);
+        pad(section, sz);
     }
 
-    if (sz < 56)
+    unsigned char* msg_size = make_8le(orig);
+    for (size_t i = 56; i != 64; ++i)
     {
-        memcpy(section, message.data(), sz);
-        pad(section, sz);
-        unsigned char* msg_size = make_8le(orig);
-        for (size_t i = 56; i != 64; ++i)
-        {
-            section[i] = msg_size[i - 56];
-            cout << unsigned(msg_size[i-56]);
-        }
-        //section[56] = 0;
-        //section[57] = 1;
+        section[i] = msg_size[i - 56];
+        cout << unsigned(msg_size[i - 56]);
     }
-    cout << '\n';
     do_section(section);
+    cout << '\n';
+    
     delete[] section;
 
     outlog << std::hex << A << B << C << D << '\n';

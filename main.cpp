@@ -11,6 +11,6 @@ using std::vector;
 int main()
 {
     MD5 test;
-    auto bob = test.hash("I have twenty two pineapples and they have characters a");
+    auto bob = test.hash("Intentionally created message of fifty six bitty bitties");
     cout << bob;
 }
