@@ -3,14 +3,7 @@
 #include <vector>
 #include <iostream>
 
-#include "md5.h"
-#include "sha1.h"
-#include "sha256.h"
-#include "sha224.h"
-#include "sha512.h"
-#include "sha384.h"
-#include "sha512_224.h"
-#include "sha512_256.h"
+#include "hasher.h"
 
 using std::cout;
 using std::vector;
