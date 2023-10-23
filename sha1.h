@@ -23,9 +23,10 @@ private:
     unsigned DD = D;
     unsigned EE = E;
     void reset_state();
+    void make_mblocks(unsigned*, unsigned char*&);
     void do_section(unsigned* section);
     std::string hash(unsigned char* message, std::size_t N);
 
 };
 
-unsigned rotleft(unsigned orig, unsigned amount);
+unsigned rotl(unsigned orig, unsigned amount);

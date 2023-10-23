@@ -8,7 +8,7 @@
 
 #include "sha1.h"
 
-std::ofstream shalog("sha_log.txt");
+static std::ofstream outlog("sha_log.txt");
 
 void SHA1::reset_state()
 {
@@ -72,19 +72,19 @@ void SHA1::do_section(unsigned* section)
         }
         unsigned debugvar = (section[i - 3] ^ section[i - 8] ^ 
                              section[i - 14] ^ section[i - 16]);
-        extended[i] = i < 16 ? extended[i] : (rotleft((extended[i - 3] ^
+        extended[i] = i < 16 ? extended[i] : (rotl((extended[i - 3] ^
             extended[i - 8] ^ extended[i - 14] ^ extended[i - 16]), 1));
 
-        unsigned temp = rotleft(AA, 5) + F + EE + k + extended[i];
+        unsigned temp = rotl(AA, 5) + F + EE + k + extended[i];
         EE = DD;
         DD = CC;
-        CC = rotleft(BB, 30);
+        CC = rotl(BB, 30);
         BB = AA;
         AA = temp;
 
-        //shalog << "after operation " << std::dec << i
+        //outlog << "after operation " << std::dec << i
         //    << " with message segment " << std::hex << extended[i] << '\n';
-        //shalog << std::hex << AA << ' ' << BB << ' ' << CC << ' ' 
+        //outlog << std::hex << AA << ' ' << BB << ' ' << CC << ' ' 
         //    << DD << ' ' << EE << '\n';
 
 
@@ -96,7 +96,7 @@ void SHA1::do_section(unsigned* section)
     EE = E += EE;
 }
 
-void make_mblocks(unsigned* mblocks, unsigned char*& section)
+void SHA1::make_mblocks(unsigned* mblocks, unsigned char*& section)
 {
     for (std::size_t i = 0; i != 16; ++i)
     {
@@ -170,7 +170,7 @@ std::string SHA1::hash(unsigned char* message, std::size_t N)
     std::ostringstream ret;
     ret << std::hex << A << B << C << D << E;
 
-    shalog << ret.str() << '\n';
+    outlog << ret.str() << '\n';
 
     reset_state();
     return ret.str();

@@ -14,7 +14,7 @@
 
 using std::cout;
 
-std::ofstream outlog("log.txt");
+static std::ofstream outlog("log.txt");
 
 void MD5::reset_state()
 {
@@ -86,7 +86,7 @@ unsigned get_4le(unsigned char* bob)
     return ret;
 }
 
-unsigned rotleft(unsigned orig, unsigned amount)
+unsigned rotl(unsigned orig, unsigned amount)
 {
     return (orig << amount) | (orig >> (32 - amount));
 }
@@ -135,7 +135,7 @@ void MD5::do_section(unsigned char* section)
         AA = DD;
         DD = CC;
         CC = BB;
-        BB += rotleft(F, s[i]);
+        BB += rotl(F, s[i]);
     }
     AA = A += AA;
     BB = B += BB;
