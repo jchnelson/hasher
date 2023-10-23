@@ -9,6 +9,8 @@
 #include "sha224.h"
 #include "sha512.h"
 #include "sha384.h"
+#include "sha512_224.h"
+#include "sha512_256.h"
 
 using std::cout;
 using std::vector;
@@ -42,5 +44,13 @@ int main()
     SHA384 sha384;
     auto snert = sha384.hash_string("Two-dollar margaritas on wednesdays!");
     cout << snert << '\n';
+
+    SHA512_224 sha512_224;
+    auto qwert = sha512_224.hash_string("Bob's your uncle");
+    cout << qwert << '\n';
+
+    SHA512_256 sha512_256;
+    auto qwerty = sha512_256.hash_string("Bob's your uncle");
+    cout << qwerty << '\n';
 
 }

@@ -3,9 +3,11 @@
 #include <string>
 #include <cstddef>
 
+#include "hash_algo.h"
+
 typedef unsigned long long u_ll;
 
-class SHA512
+class SHA512 : public HashAlgo
 {
 public:
     SHA512() = default;

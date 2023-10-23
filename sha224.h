@@ -3,7 +3,9 @@
 #include <string>
 #include <cstddef>
 
-class SHA224
+#include "hash_algo.h"
+
+class SHA224 : public HashAlgo
 {
 public:
     SHA224() = default;

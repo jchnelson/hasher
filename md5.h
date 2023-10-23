@@ -3,7 +3,9 @@
 #include <vector>
 #include <cstddef>
 
-class MD5
+#include "hash_algo.h"
+
+class MD5 : public HashAlgo
 {
 public:
     MD5();

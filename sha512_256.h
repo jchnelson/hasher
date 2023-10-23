@@ -7,23 +7,22 @@
 
 typedef unsigned long long u_ll;
 
-class SHA384 : public HashAlgo
+class SHA512_256 : public HashAlgo
 {
 public:
-    SHA384() = default;
+    SHA512_256() = default;
     std::string hash_string(const std::string&);
     std::string hash_file(const std::string&);
 
 private:
-    u_ll A = 0xcbbb9d5dc1059ed8;
-    u_ll B = 0x629a292a367cd507;
-    u_ll C = 0x9159015a3070dd17;
-    u_ll D = 0x152fecd8f70e5939;
-    u_ll E = 0x67332667ffc00b31;
-    u_ll F = 0x8eb44a8768581511;
-    u_ll G = 0xdb0c2e0d64f98fa7;
-    u_ll H = 0x47b5481dbefa4fa4;
-
+    u_ll A = 0x22312194FC2BF72C;
+    u_ll B = 0x9F555FA3C84C64C2;
+    u_ll C = 0x2393B86B6F53B151;
+    u_ll D = 0x963877195940EABD;
+    u_ll E = 0x96283EE2A88EFFE3;
+    u_ll F = 0xBE5E1E2553863992;
+    u_ll G = 0x2B0199FC2C85B8AA;
+    u_ll H = 0x0EB72DDC81C52CA2;
     u_ll AA = A;
     u_ll BB = B;
     u_ll CC = C;

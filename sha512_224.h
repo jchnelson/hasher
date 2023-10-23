@@ -1,3 +1,5 @@
+
+
 #pragma once
 
 #include <string>
@@ -7,23 +9,22 @@
 
 typedef unsigned long long u_ll;
 
-class SHA384 : public HashAlgo
+class SHA512_224 : public HashAlgo
 {
 public:
-    SHA384() = default;
+    SHA512_224() = default;
     std::string hash_string(const std::string&);
     std::string hash_file(const std::string&);
 
 private:
-    u_ll A = 0xcbbb9d5dc1059ed8;
-    u_ll B = 0x629a292a367cd507;
-    u_ll C = 0x9159015a3070dd17;
-    u_ll D = 0x152fecd8f70e5939;
-    u_ll E = 0x67332667ffc00b31;
-    u_ll F = 0x8eb44a8768581511;
-    u_ll G = 0xdb0c2e0d64f98fa7;
-    u_ll H = 0x47b5481dbefa4fa4;
-
+    u_ll A = 0x8C3D37C819544DA2;
+    u_ll B = 0x73E1996689DCD4D6;
+    u_ll C = 0x1DFAB7AE32FF9C82;
+    u_ll D = 0x679DD514582F9FCF;
+    u_ll E = 0x0F6D2B697BD44DA8;
+    u_ll F = 0x77E36F7304C48942;
+    u_ll G = 0x3F9D85A86A1D36C8;
+    u_ll H = 0x1112E6AD91D692A1;
     u_ll AA = A;
     u_ll BB = B;
     u_ll CC = C;
