@@ -6,6 +6,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "sha256.h"
+#include "sha224.h"
 
 using std::cout;
 using std::vector;
@@ -24,5 +25,11 @@ int main()
     SHA256 sha256;
 
     auto frank = sha256.hash_file("Requiem.mp3");
-    cout << frank;
+    cout << frank << '\n';
+
+    SHA224 sha224;
+
+    auto chris = sha224.hash_string("Two-dollar margaritas on wednesdays!");
+    cout << chris << '\n';
+
 }
