@@ -8,6 +8,7 @@
 #include "sha256.h"
 #include "sha224.h"
 #include "sha512.h"
+#include "sha384.h"
 
 using std::cout;
 using std::vector;
@@ -37,5 +38,9 @@ int main()
 
     auto framb = sha512.hash_file("Requiem.mp3");
     cout << framb << '\n';
+
+    SHA384 sha384;
+    auto snert = sha384.hash_string("Two-dollar margaritas on wednesdays!");
+    cout << snert << '\n';
 
 }
