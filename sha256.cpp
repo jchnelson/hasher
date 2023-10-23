@@ -11,7 +11,6 @@
 static std::ofstream outlog("sha256_log.txt");
 
 
-
 unsigned rotr(unsigned orig, unsigned amount)
 {
     return orig >> amount | orig << (32 - amount);
@@ -31,7 +30,7 @@ void SHA256::reset_state()
 
 void SHA256::do_section(unsigned* section)
 {
-    unsigned* extended = new unsigned[64];
+    unsigned extended[64];
     memcpy(extended, section, 64); // original 16 segments
     for (int i = 0; i < 64; ++i)
     {
@@ -74,42 +73,37 @@ void SHA256::do_section(unsigned* section)
     HH = H += HH;
 }
 
-void SHA256::make_mblocks(unsigned* mblocks, unsigned char*& section)
+void SHA256::make_mblocks(unsigned* mblocks, unsigned char* section)
 {
     for (std::size_t i = 0; i != 16; ++i)
     {
-        unsigned char block[4]{};
-        memcpy(block, section, 4);
-        std::advance(section, 4);
+        unsigned char block[4];
+        memcpy(block, &section[i*4], 4);
         mblocks[i] = get_4be(block);
     }
 }
 
 std::string SHA256::hash(unsigned char* message, std::size_t N)
 {
-
-
-
-    unsigned* mblocks = new unsigned[16];
+    unsigned mblocks[16];
 
     std::size_t sz = N;
     std::size_t orig = sz;
+    std::size_t pos = 0;
     unsigned char* newm = new unsigned char[N];
-    unsigned char* newm_todelete = newm;
     memcpy(newm, message, N);
 
-    unsigned char* section = new unsigned char[64] {};
-    unsigned char* section_todelete = section;
+    unsigned char section[64]{};
     while (sz > 64)
     {
-        make_mblocks(mblocks, newm);
+        make_mblocks(mblocks, &newm[pos]);
         do_section(mblocks);
         sz -= 64;
+        pos += 64;
     }
-
     if (sz >= 56)
     {
-        memcpy(section, newm, sz);
+        memcpy(section, &newm[pos], sz);
 
         section[sz] = 0x80;
         for (std::size_t i = sz + 1; i != 64; ++i)
@@ -117,14 +111,11 @@ std::string SHA256::hash(unsigned char* message, std::size_t N)
             section[i] = 0x00;
         }
         make_mblocks(mblocks, section);
-        delete[] section_todelete;
-        section = new unsigned char[64];
-        section_todelete = section;
         do_section(mblocks);
     }
     else
     {
-        memcpy(section, newm, sz);
+        memcpy(section, &newm[pos], sz);
         section[sz] = 0x80;
         for (size_t i = sz + 1; i != 56; ++i)
         {
@@ -139,14 +130,15 @@ std::string SHA256::hash(unsigned char* message, std::size_t N)
     make_mblocks(mblocks, section);
     do_section(mblocks);
 
-    delete[] section_todelete;
     delete[] message;
-    delete[] newm_todelete;
+    delete[] newm;
     delete[] msg_size;
-    delete[] mblocks;
 
     std::ostringstream ret;
-    ret << std::hex << A << B << C << D << E << F << G << H;
+    ret << std::hex << std::setfill('0') << std::setw(8) 
+        << A << std::setw(8) << B << std::setw(8) << C << std::setw(8) 
+        << D << std::setw(8) << E << std::setw(8) << F << std::setw(8) 
+        << G << std::setw(8) << H;
 
     outlog << ret.str() << '\n';
 
@@ -166,7 +158,7 @@ std::string SHA256::hash_file(const std::string& filename)
 std::string SHA256::hash_string(const std::string& message)
 {
     std::size_t sz = message.size();
-    unsigned char* umsg = new unsigned char[sz] {};
+    unsigned char* umsg = new unsigned char[sz];
     if (sz != 0)
         memcpy(umsg, message.data(), sz);
     return hash(umsg, sz);

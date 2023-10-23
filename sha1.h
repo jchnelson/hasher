@@ -3,7 +3,6 @@
 #include <string>
 #include <cstddef>
 
-
 class SHA1
 {
 public:
@@ -23,7 +22,7 @@ private:
     unsigned DD = D;
     unsigned EE = E;
     void reset_state();
-    void make_mblocks(unsigned*, unsigned char*&);
+    void make_mblocks(unsigned*, unsigned char*);
     void do_section(unsigned* section);
     std::string hash(unsigned char* message, std::size_t N);
 

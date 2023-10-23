@@ -5,7 +5,6 @@
 #include <ios> // std::ios_base::binary
 #include <string>
 #include <algorithm>
-#include <iterator> // std::advance
 #include <fstream>
 #include <filesystem>
 #include <sstream>
@@ -147,22 +146,21 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
 {
     std::size_t sz = N;
     std::size_t orig = sz;
+    std::size_t pos = 0;
     unsigned char* newm = new unsigned char[N];
-    unsigned char* newm_todelete = newm;
     memcpy(newm, message, N);
 
-    unsigned char* section = new unsigned char[65] {};
+    unsigned char section[64]{};
     while (sz > 64)
     {
-        memcpy(section, newm, 64);
-        section[64] = 0;
+        memcpy(section, &newm[pos], 64);
         do_section(section);
         sz -= 64;
-        std::advance(newm, 64);
+        pos += 64;
     }
     if (sz >= 56)
     {
-        memcpy(section, newm, sz);
+        memcpy(section, &newm[pos], sz);
         section[sz] = 0x80;
         for (std::size_t i = sz + 1; i != 64; ++i)
         {
@@ -172,7 +170,7 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
     }
     else
     {
-        memcpy(section, newm, sz);
+        memcpy(section, &newm[pos], sz);
         section[sz] = 0x80;
         for (size_t i = sz + 1; i != 56; ++i)
         {
@@ -186,9 +184,8 @@ std::string MD5::hash(unsigned char* message, std::size_t N)
     }
     do_section(section);
 
-    delete[] section;
     delete[] message;
-    delete[] newm_todelete;
+    delete[] newm;
     delete[] msg_size;
 
     outlog << std::hex << A << B << C << D << '\n';

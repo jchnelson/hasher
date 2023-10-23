@@ -3,7 +3,6 @@
 #include <string>
 #include <cstddef>
 
-
 class SHA256
 {
 public:
@@ -44,7 +43,7 @@ private:
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2     };
     void reset_state();
     void do_section(unsigned*);
-    void make_mblocks(unsigned*, unsigned char*&);
+    void make_mblocks(unsigned*, unsigned char*);
     std::string hash(unsigned char*, std::size_t);
 
 };

@@ -1,10 +1,8 @@
 #include <cstddef>
-#include <iterator>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
-
 
 #include "sha1.h"
 
@@ -12,17 +10,16 @@ static std::ofstream outlog("sha_log.txt");
 
 void SHA1::reset_state()
 {
-    AA = A; // = 0x67452301;
-    BB = B; // = 0xEFCDAB89;
-    CC = C; // = 0x98BADCFE;
-    DD = D; // = 0x10325476;
-    EE = E; // = 0xC3D2E1F0;
+    AA = A = 0x67452301;
+    BB = B = 0xEFCDAB89;
+    CC = C = 0x98BADCFE;
+    DD = D = 0x10325476;
+    EE = E = 0xC3D2E1F0;
 }
 
 unsigned char* make_8be(std::size_t sz)
 {
     sz *= 8; // calculated from char, *= 8 is size in bits
-
 
     unsigned char* ret = new unsigned char[8];
     ret[0] = (sz >> 56);
@@ -44,7 +41,7 @@ unsigned get_4be(unsigned char* bob)
 
 void SHA1::do_section(unsigned* section)
 {
-    unsigned* extended = new unsigned[80];
+    unsigned extended[80];
     memcpy(extended, section, 64);
     for (int i = 0; i < 80; ++i)
     {
@@ -86,8 +83,6 @@ void SHA1::do_section(unsigned* section)
         //    << " with message segment " << std::hex << extended[i] << '\n';
         //outlog << std::hex << AA << ' ' << BB << ' ' << CC << ' ' 
         //    << DD << ' ' << EE << '\n';
-
-
     }
     AA = A += AA;
     BB = B += BB;
@@ -96,13 +91,12 @@ void SHA1::do_section(unsigned* section)
     EE = E += EE;
 }
 
-void SHA1::make_mblocks(unsigned* mblocks, unsigned char*& section)
+void SHA1::make_mblocks(unsigned* mblocks, unsigned char* section)
 {
     for (std::size_t i = 0; i != 16; ++i)
     {
-        unsigned char block[4]{};
-        memcpy(block, section, 4);
-        std::advance(section, 4);
+        unsigned char block[4];
+        memcpy(block, &section[i*4], 4);
         mblocks[i] = get_4be(block);
     }
 }
@@ -110,43 +104,37 @@ void SHA1::make_mblocks(unsigned* mblocks, unsigned char*& section)
 std::string SHA1::hash(unsigned char* message, std::size_t N)
 {
 
-
-
-    unsigned* mblocks = new unsigned[16];
+    unsigned mblocks[16];
 
     std::size_t sz = N;
     std::size_t orig = sz;
+    std::size_t pos = 0;
     unsigned char* newm = new unsigned char[N];
-    unsigned char* newm_todelete = newm;
     memcpy(newm, message, N);
 
-    unsigned char* section = new unsigned char[64] {};
-    unsigned char* section_todelete = section;
+    unsigned char section[64];
     while (sz > 64)
     {
-        make_mblocks(mblocks, newm);
+        make_mblocks(mblocks, &newm[pos]);
         do_section(mblocks);
         sz -= 64;
+        pos += 64;
     }
 
     if (sz >= 56)
     {
-        memcpy(section, newm, sz);
-
+        memcpy(section, &newm[pos], sz);
         section[sz] = 0x80;
         for (std::size_t i = sz + 1; i != 64; ++i)
         { 
             section[i] = 0x00;
         }
         make_mblocks(mblocks, section);
-        delete[] section_todelete;
-        section = new unsigned char[64];
-        section_todelete = section;
         do_section(mblocks);
     }
     else
     {
-        memcpy(section, newm, sz);
+        memcpy(section, &newm[pos], sz);
         section[sz] = 0x80;
         for (size_t i = sz + 1; i != 56; ++i)
         {
@@ -161,11 +149,9 @@ std::string SHA1::hash(unsigned char* message, std::size_t N)
     make_mblocks(mblocks, section);
     do_section(mblocks);
 
-    delete[] section_todelete;
     delete[] message;
-    delete[] newm_todelete;
+    delete[] newm;
     delete[] msg_size;
-    delete[] mblocks;
 
     std::ostringstream ret;
     ret << std::hex << A << B << C << D << E;
@@ -188,7 +174,7 @@ std::string SHA1::hash_file(const std::string& filename)
 std::string SHA1::hash_string(const std::string& message)
 {
     std::size_t sz = message.size();
-    unsigned char* umsg = new unsigned char[sz]{};
+    unsigned char* umsg = new unsigned char[sz];
     if (sz != 0)
         memcpy(umsg, message.data(), sz);
     return hash(umsg, sz);
