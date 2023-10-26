@@ -5,10 +5,29 @@
 #include <ios>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 #include "sha224.h"
 
 static std::ofstream outlog("sha224_log.txt");
+
+std::string SHA224::str()
+{
+    std::ostringstream ret;
+    ret << std::hex << std::setfill('0') << std::setw(8)
+        << A << std::setw(8) << B << std::setw(8) << C << std::setw(8)
+        << D << std::setw(8) << E << std::setw(8) << F << std::setw(8)
+        << G;
+
+    outlog << ret.str() << '\n';
+
+    return ret.str();
+}
+
+std::vector<std::size_t> SHA224::ints()
+{
+    return std::vector<std::size_t>{A,B,C,D,E,F,G};
+}
 
 
 void SHA224::reset_state()
@@ -78,8 +97,9 @@ void SHA224::make_mblocks(unsigned* mblocks, unsigned char* section)
     }
 }
 
-std::string SHA224::hash(unsigned char* message, std::size_t N)
+void SHA224::hash(unsigned char* message, std::size_t N)
 {
+    reset_state();
     unsigned mblocks[16];
 
     std::size_t sz = N;
@@ -128,33 +148,4 @@ std::string SHA224::hash(unsigned char* message, std::size_t N)
     delete[] message;
     delete[] newm;
     delete[] msg_size;
-
-    std::ostringstream ret;
-    ret << std::hex << std::setfill('0') << std::setw(8)
-        << A << std::setw(8) << B << std::setw(8) << C << std::setw(8)
-        << D << std::setw(8) << E << std::setw(8) << F << std::setw(8)
-        << G;
-
-    outlog << ret.str() << '\n';
-
-    reset_state();
-    return ret.str();
-}
-
-std::string SHA224::hash_file(const std::string& filename)
-{
-    std::basic_ifstream<unsigned char> infile(filename, std::ios_base::binary);
-    std::size_t filesize = std::filesystem::file_size(std::filesystem::path(filename));
-    unsigned char* message = new unsigned char[filesize];
-    infile.read(message, filesize);
-    return hash(message, filesize);
-}
-
-std::string SHA224::hash_string(const std::string& message)
-{
-    std::size_t sz = message.size();
-    unsigned char* umsg = new unsigned char[sz];
-    if (sz != 0)
-        memcpy(umsg, message.data(), sz);
-    return hash(umsg, sz);
 }

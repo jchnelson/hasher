@@ -9,8 +9,8 @@ class MD5 : public HashAlgo
 {
 public:
     MD5();
-    std::string hash_file(const std::string&);
-    std::string hash_string(const std::string&);
+    std::string str();
+    std::vector<std::size_t> ints();
 
 private:
     unsigned A = 0x67452301;
@@ -28,7 +28,7 @@ private:
         4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,  4, 11, 16, 23,
         6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,  6, 10, 15, 21 };
     void do_section(unsigned char*);
-    std::string hash(unsigned char*, std::size_t);
+    void hash(unsigned char*, std::size_t);
     void reset_state();
 };
 

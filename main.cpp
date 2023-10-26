@@ -1,49 +1,75 @@
-
-#include <cmath>
-#include <vector>
 #include <iostream>
 
 #include "hasher.h"
 
 using std::cout;
-using std::vector;
 
 int main()
 {
-    //MD5 md5;
-    //auto bob = md5.hash_file("Requiem.mp3");
-    //cout << bob << '\n';
+    cout << std::hex;
 
-    //SHA1 sha1;
+    MD5 md5;
+    md5.hash_file("Requiem.mp3");
+    cout << md5.str() << '\n';
+    for (const auto& one_int : md5.ints())
+    {
+        cout << one_int << '\n';
+    }
 
-    //auto steve = sha1.hash_string("Bob's your uncle");
-    //cout << steve << '\n';
+    SHA1 sha1;
+    sha1.hash_string("Bob's your uncle");
+    cout << sha1.str() << '\n';
+    for (const auto& one_int : sha1.ints())
+    {
+        cout << one_int << '\n';
+    }
 
-    //SHA256 sha256;
+    SHA256 sha256;
+    sha256.hash_file("Requiem.mp3");
+    cout << sha256.str() << '\n';
+    for (const auto& one_int : sha256.ints())
+    {
+        cout << one_int << '\n';
+    }
 
-    //auto frank = sha256.hash_file("Requiem.mp3");
-    //cout << frank << '\n';
-
-    //SHA224 sha224;
-
-    //auto chris = sha224.hash_string("Two-dollar margaritas on wednesdays!");
-    //cout << chris << '\n';
+    SHA224 sha224;
+    sha224.hash_string("Two-dollar margaritas on wednesdays!");
+    cout << sha224.str() << '\n';
+    for (const auto& one_int : sha224.ints())
+    {
+        cout << one_int << '\n';
+    }
 
     SHA512 sha512;
-
-    auto framb = sha512.hash_file("Requiem.mp3");
-    cout << framb << '\n';
+    sha512.hash_file("Requiem.mp3");
+    cout << sha512.str() << '\n';
+    for (const auto& one_int : sha512.ints())
+    {
+        cout << one_int << '\n';
+    }
 
     SHA384 sha384;
-    auto snert = sha384.hash_string("Two-dollar margaritas on wednesdays!");
-    cout << snert << '\n';
+    sha384.hash_string("Two-dollar margaritas on wednesdays!");
+    cout << sha384.str() << '\n';
+    for (const auto& one_int : sha384.ints())
+    {
+        cout << one_int << '\n';
+    }
 
     SHA512_224 sha512_224;
-    auto qwert = sha512_224.hash_string("Bob's your uncle");
-    cout << qwert << '\n';
+    sha512_224.hash_string("Bob's your uncle");
+    cout << sha512_224.str() << '\n';
+    for (const auto& one_int : sha512_224.ints())
+    {
+        cout << one_int << '\n';
+    }
 
     SHA512_256 sha512_256;
-    auto qwerty = sha512_256.hash_string("Bob's your uncle");
-    cout << qwerty << '\n';
+    sha512_256.hash_string("Bob's your uncle");
+    cout << sha512_256.str() << '\n';
+    for (const auto& one_int : sha512_256.ints())
+    {
+        cout << one_int << '\n';
+    }
 
 }

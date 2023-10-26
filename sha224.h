@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <cstddef>
 
 #include "hash_algo.h"
@@ -9,8 +10,8 @@ class SHA224 : public HashAlgo
 {
 public:
     SHA224() = default;
-    std::string hash_string(const std::string&);
-    std::string hash_file(const std::string&);
+    std::string str();
+    std::vector<std::size_t> ints();
 
 private:
     unsigned A = 0xc1059ed8;
@@ -46,7 +47,7 @@ private:
     void reset_state();
     void do_section(unsigned*);
     void make_mblocks(unsigned*, unsigned char*);
-    std::string hash(unsigned char*, std::size_t);
+    void hash(unsigned char*, std::size_t);
 
 };
 
